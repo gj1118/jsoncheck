@@ -25,8 +25,6 @@ var (
 	Date    = "unknown"
 )
 
-
-
 func main() {
 	// Define command line flags
 	dirPtr := flag.String("dir", ".", "Directory to scan for JSON files")
