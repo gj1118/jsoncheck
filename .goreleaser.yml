@@ -21,8 +21,11 @@ builds:
     main: .
     binary: jsoncheck
     ldflags:
-      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
-
+      - -s -w
+      - -X github.com/gj1118/m/v2/constants.Version={{.Tag}}
+      - -X github.com/gj1118/m/v2/constants.Commit={{.Commit}}
+      - -X github.com/gj1118/m/v2/constants.Date={{.Date}}
+      
 archives:
   - format: tar.gz
     # Use a good naming convention
