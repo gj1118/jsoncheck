@@ -149,7 +149,7 @@ func runPamFile(pamfilelocation string) (string, error) {
 	}
 
 	// Try to open the output folder for the user
-	_ = openFolder(outputDirEscaped)
+//	_ = openFolder(outputDirEscaped)
 
 	// Return the absolute path of the output directory
 	return outputDirEscaped, nil
