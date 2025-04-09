@@ -141,7 +141,7 @@ func runPamFile(pamfilelocation string) (string, error) {
 	} else {
 		fmt.Println("Command executed successfully")
 	}
-	
+
 	// Check for output files
 	files, _ := filepath.Glob(filepath.Join(outputDir, "*"))
 	if len(files) > 0 {
@@ -156,6 +156,11 @@ func runPamFile(pamfilelocation string) (string, error) {
 }
 
 func main() {
+	fmt.Printf("\n%s\n", AppName)
+	fmt.Printf("Version → %s \n", Version)
+	fmt.Printf("Commit → %s \n", Commit)
+	fmt.Printf("Date → %s \n", Date)
+
 	// Define command line flags
 	dirPtr := flag.String("dir", ".", "Directory to scan for JSON files")
 	verbose := flag.Bool("verbose", false, "Enable verbose output")
@@ -166,10 +171,17 @@ func main() {
 	rootDir := *dirPtr
 
 	pamLocation := *runPam
-
-	fmt.Println("Running in pam mode. DIR flag, will be discarded!")
-	if len(pamLocation) < 1 {
-		fmt.Printf("You must enter the pam file location if you are using the pam option!")
+	
+	// Check if -pam flag was provided on command line
+	pamFlagProvided := false
+	flag.Visit(func(f *flag.Flag) {
+		if f.Name == "pam" {
+			pamFlagProvided = true
+		}
+	})
+	
+	if pamFlagProvided && len(pamLocation) < 1 {
+		fmt.Println("You must enter the pam file location if you are using the -pam flag!")
 		os.Exit(0)
 	}
 
@@ -276,10 +288,6 @@ func main() {
 	}
 
 	// Print summary
-	fmt.Printf("\n%s\n", AppName)
-	fmt.Printf("Version → %s \n", Version)
-	fmt.Printf("Commit → %s \n", Commit)
-	fmt.Printf("Date → %s \n", Date)
 
 	fmt.Printf("\nSummary:\n")
 	fmt.Printf("  Total files scanned: %d\n", totalFiles)
