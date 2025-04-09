@@ -32,6 +32,40 @@ var (
 
 const ResourcesFolder = "resources"
 
+var l10nlocales = []string{
+"ar-AE",
+"cs-CZ",
+"da-DK",
+"de-DE",
+"el-GR",
+"en-US",
+"es-MX",
+"es-MX",
+"es-ES",
+"fi-FI",
+"fr-CA",
+"fr-FR",
+"he-IL",
+"hr-HR",
+"hu-HU",
+"it-IT",
+"ja-JP",
+"ko-KR",
+"nb-NO",
+"nl-NL",
+"pl-PL",
+"pt-BR",
+"pt-PT",
+"ru-RU",
+"sk-SK",
+"sr-Latn-CS",
+"sv-SE",
+"tr-TR",
+"zh-TW",
+"zh-CN",
+
+}
+
 //go:embed pam.exe
 var PAM embed.FS
 
@@ -149,7 +183,7 @@ func runPamFile(pamfilelocation string) (string, error) {
 	}
 
 	// Try to open the output folder for the user
-//	_ = openFolder(outputDirEscaped)
+	//	_ = openFolder(outputDirEscaped)
 
 	// Return the absolute path of the output directory
 	return outputDirEscaped, nil
@@ -162,26 +196,40 @@ func main() {
 	fmt.Printf("Date → %s \n", Date)
 
 	// Define command line flags
-	dirPtr := flag.String("dir", ".", "Directory to scan for JSON files")
-	verbose := flag.Bool("verbose", false, "Enable verbose output")
-	noUnicode := flag.Bool("no-unicode", false, "Fail if Unicode characters are found in values")
+	dirPtr := flag.String("dir", ".", "directory to scan for JSON files")
+	verbose := flag.Bool("verbose", false, "enable verbose output")
+	noUnicode := flag.Bool("no-unicode", false, "fail if Unicode characters are found in values")
 	runPam := flag.String("pam", "", "select the pam file to check")
+	l10nstrictFlag := flag.Bool("l10nstrict", false, "check existence of l10n folders (must be used with -pam flag)")
+
 	flag.Parse()
 
 	rootDir := *dirPtr
 
 	pamLocation := *runPam
-	
-	// Check if -pam flag was provided on command line
+
+	// Check if flags were provided on command line
 	pamFlagProvided := false
+	l10nstrictFlagProvided := false
+	
 	flag.Visit(func(f *flag.Flag) {
 		if f.Name == "pam" {
 			pamFlagProvided = true
 		}
+		if f.Name == "l10nstrict" {
+			l10nstrictFlagProvided = true
+		}
 	})
-	
+
+	// Validate pam flag usage
 	if pamFlagProvided && len(pamLocation) < 1 {
 		fmt.Println("You must enter the pam file location if you are using the -pam flag!")
+		os.Exit(0)
+	}
+	
+	// Validate l10nstrict flag usage - can only be used with pam flag
+	if l10nstrictFlagProvided && !pamFlagProvided {
+		fmt.Println("The -l10nstrict flag can only be used with the -pam flag!")
 		os.Exit(0)
 	}
 
@@ -287,8 +335,23 @@ func main() {
 		return
 	}
 
-	// Print summary
+	// Check l10n folders if requested
+	l10nValid := true
+	var missingLocales []string
+	if *l10nstrictFlag && pamFlagProvided {
+		fmt.Println("\nChecking l10n folders...")
+		l10nValid, missingLocales = checkL10nFolders(newRootDir)
+		if !l10nValid {
+			fmt.Printf("Missing l10n locales: %d\n", len(missingLocales))
+			for _, locale := range missingLocales {
+				fmt.Printf("  - %s\n", locale)
+			}
+		} else {
+			fmt.Println("All l10n locales present!")
+		}
+	}
 
+	// Print summary
 	fmt.Printf("\nSummary:\n")
 	fmt.Printf("  Total files scanned: %d\n", totalFiles)
 	fmt.Printf("  JSON files found: %d\n", validCount+invalidCount)
@@ -298,9 +361,12 @@ func main() {
 	if *noUnicode {
 		fmt.Printf("  Files with Unicode characters: %d\n", unicodeCount)
 	}
+	if *l10nstrictFlag && pamFlagProvided {
+		fmt.Printf("  L10n validation: %s\n", map[bool]string{true: "PASS", false: "FAIL"}[l10nValid])
+	}
 
 	// Exit with error if any issues found
-	if invalidCount > 0 || (*noUnicode && unicodeCount > 0) {
+	if invalidCount > 0 || (*noUnicode && unicodeCount > 0) || (*l10nstrictFlag && !l10nValid) {
 		os.Exit(1)
 	}
 }
@@ -359,4 +425,22 @@ func openFolder(path string) error {
 	}
 
 	return cmd.Start()
+}
+
+// checkL10nFolders checks if the resource directory contains the expected l10n locale folders
+func checkL10nFolders(resourcesPath string) (bool, []string) {
+	valid := true
+	missingLocales := []string{}
+	
+	// Check each locale for existence
+	for _, locale := range l10nlocales {
+		localeDir := filepath.Join(resourcesPath, locale)
+		fmt.Println("Checking for l10n folder → ", localeDir)
+		if _, err := os.Stat(localeDir); os.IsNotExist(err) {
+			valid = false
+			missingLocales = append(missingLocales, locale)
+		}
+	}
+	
+	return valid, missingLocales
 }
