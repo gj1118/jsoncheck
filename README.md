@@ -41,6 +41,8 @@ jsoncheck -dir=/path/to/your/directory
 |------|-------------|---------|---------|
 | `-dir` | Directory to scan for JSON files | Current directory (`.`) | `-dir=/path/to/scan` |
 | `-verbose` | Enable verbose output | `false` | `-verbose` |
+| `-no-unicode` | Fail if Unicode characters are found in values | `false` | `-no-unicode` |
+| `-pam` | Select a PAM file to extract and validate JSON from | Empty | `-pam=/path/to/file.pam` |
 
 ### Exit Codes
 
@@ -55,6 +57,12 @@ jsoncheck
 
 # Check a specific directory with verbose output
 jsoncheck -dir=/path/to/project -verbose
+
+# Check for Unicode characters in JSON values
+jsoncheck -dir=./configs -no-unicode
+
+# Extract and validate JSON from a PAM file
+jsoncheck -pam=/path/to/file.pam
 
 # Use in a script or CI pipeline
 jsoncheck -dir=./configs && echo "All JSON configs are valid!"
