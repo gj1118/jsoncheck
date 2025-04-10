@@ -43,6 +43,7 @@ jsoncheck -dir=/path/to/your/directory
 | `-verbose` | Enable verbose output | `false` | `-verbose` |
 | `-no-unicode` | Fail if Unicode characters are found in values | `false` | `-no-unicode` |
 | `-pam` | Select a PAM file to extract and validate JSON from | Empty | `-pam=/path/to/file.pam` |
+| `-l10nstrict` | Check existence of l10n folders (must be used with `-pam` flag) | `false` | `-l10nstrict` |
 
 ### Exit Codes
 
@@ -64,6 +65,9 @@ jsoncheck -dir=./configs -no-unicode
 # Extract and validate JSON from a PAM file
 jsoncheck -pam=/path/to/file.pam
 
+# Check l10n folders in a PAM file
+jsoncheck -pam=/path/to/file.pam -l10nstrict
+
 # Use in a script or CI pipeline
 jsoncheck -dir=./configs && echo "All JSON configs are valid!"
 ```
@@ -81,6 +85,7 @@ Summary:
   JSON files found: 15
   Valid JSON files: 14
   Invalid JSON files: 1
+  L10n validation: PASS
 ```
 
 ## License
